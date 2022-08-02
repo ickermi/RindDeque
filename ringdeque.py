@@ -1,9 +1,8 @@
 import typing
 
-
 class RingDeque(typing.MutableSequence):
 
-    def __init__(self, iterable=None, *, maxlen):
+    def __init__(self, iterable = None, *, maxlen):
         if maxlen < 0:
             raise ValueError('maxlen must be positive')
         self._buffer = [None for _ in range(maxlen)]
@@ -13,30 +12,26 @@ class RingDeque(typing.MutableSequence):
             self.extend(iterable)
 
     def __getitem__(self, index):
-        if (index < 0 and abs(index) > self._items_amount or
-                index >= self._items_amount):
+        if (index < 0 and abs(index) > self._items_amount) or (index >= self._items_amount):
             raise IndexError('deque index out of range')
         index = index % self._items_amount
         return self._buffer[(self._start_index + index) % len(self._buffer)]
 
     def __setitem__(self, index, value):
-        if (index < 0 and abs(index) > self._items_amount or
-                index >= self._items_amount):
+        if (index < 0 and abs(index) > self._items_amount) or (index >= self._items_amount):
             raise IndexError('deque index out of range')
         index = index % self._items_amount
         self._buffer[(self._start_index + index) % len(self._buffer)] = value
 
     def __delitem__(self, index):
-        if (index < 0 and abs(index) > self._items_amount or
-                index >= self._items_amount):
+        if (index < 0 and abs(index) > self._items_amount) or (index >= self._items_amount):
             raise IndexError('deque index out of range')
         index = index % len(self)
-        # Для удаления нужного элемента, переставляем все стоящие от него
-        # справа или слева элементы на 1 ячейку. Направление перестановки
-        # выбирается в зависимости от того, в какой половине находится
-        # удаляемый элемент. В ячейку, из которой был взят последний
-        # переставленный элемент, записываем None для предотвращения
-        # утечки памяти.
+        # Для удаления нужного элемента, переставляем все стоящие от него справа
+        # или слева элементы на 1 ячейку. Направление перестановки выбирается
+        # в зависимости от того, в какой половине находится удаляемый элемент.
+        # В ячейку, из который был взят последний переставленный элемент записываем
+        # None для предотвращения утечки памяти.
         if index > len(self) // 2:
             for i in range(index, len(self) - 1):
                 self[i] = self[i + 1]
@@ -87,18 +82,17 @@ class RingDeque(typing.MutableSequence):
         # Нормализация индекса на случай его отрицательных значений.
         else:
             index = index % self._items_amount
-        # При вставке в правую часть, все элементы справа смещаются вправо.
-        # При вставке в левую часть, все элементы слева смещаются влево.
-        # Это сделано для того, чтобы производить меньше смещений элементов в
-        # общем случае.
+        # Все элементы справа смещаются направо, а при вставке в левую —
+        # все элементы слева смещаются влево. это сделано для того, чтобы производить
+        # меньше смещений элементов в общем случае.
         if index > len(self) // 2:
             self.append(None)
             for i in reversed(range(index + 1, len(self))):
-                self[i] = self[i - 1]
+                self[i] = self[i-1]
         else:
             self.appendleft(None)
             for i in range(0, index + 1):
-                self[i] = self[i + 1]
+                self[i] = self[i+1]
         self[index] = item
 
     def popleft(self):
@@ -111,3 +105,4 @@ class RingDeque(typing.MutableSequence):
         else:
             for i in range(abs(n)):
                 self.append(self.popleft())
+
