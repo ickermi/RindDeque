@@ -2,7 +2,7 @@ from copy import copy
 
 import pytest
 
-from circular_buffer import RingDeque
+from ringdeque import RingDeque
 
 
 class TestRingDeque:
