@@ -105,9 +105,13 @@ class RingDeque(typing.MutableSequence):
         return self.pop(0)
 
     def rotate(self, n=1):
-        if n > 0:
-            for i in range(n):
-                self.appendleft(self.pop())
+        n = n % len(self)
+        if len(self) == len(self._buffer):
+            self._start_index = (self._start_index - n) % len(self)
         else:
-            for i in range(abs(n)):
-                self.append(self.popleft())
+            if n > 0:
+                for i in range(n):
+                    self.appendleft(self.pop())
+            else:
+                for i in range(abs(n)):
+                    self.append(self.popleft())
