@@ -106,12 +106,12 @@ class RingDeque(typing.MutableSequence):
 
     def rotate(self, n=1):
         n = n % len(self)
+        # При полностью заполненом буфере достаточно изменить
+        # позицию старта в буфере.
         if len(self) == len(self._buffer):
             self._start_index = (self._start_index - n) % len(self)
         else:
-            if n > 0:
-                for i in range(n):
-                    self.appendleft(self.pop())
-            else:
-                for i in range(abs(n)):
-                    self.append(self.popleft())
+            for _ in range(n):
+                self._buffer[(self._start_index - 1) % len(self._buffer)] = self[-1]
+                self[-1] = None
+                self._start_index = (self._start_index - 1) % len(self._buffer)
