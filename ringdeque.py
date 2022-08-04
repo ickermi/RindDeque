@@ -82,11 +82,11 @@ class RingDeque(typing.MutableSequence):
         # Если модуль индекса больше, чем количество элементов в очереди,
         # item должен попасть в начало или в конец очереди в зависимости
         # от того, положительный или отрицательный индекс был передан.
-        if abs(index) >= self._items_amount:
-            index = self._items_amount if index > 0 else 0
+        if abs(index) >= len(self):
+            index = len(self) if index > 0 else 0
         # Нормализация индекса на случай его отрицательных значений.
         else:
-            index = index % self._items_amount
+            index = index % len(self)
         # При вставке в правую часть, все элементы справа смещаются вправо.
         # При вставке в левую часть, все элементы слева смещаются влево.
         # Это сделано для того, чтобы производить меньше смещений элементов в
@@ -105,13 +105,19 @@ class RingDeque(typing.MutableSequence):
         return self.pop(0)
 
     def rotate(self, n=1):
-        n = n % len(self)
+        # Нормализуем индекс.
+        n = n % len(self) if n >= 0 else n % -len(self)
         # При полностью заполненом буфере достаточно изменить
         # позицию старта в буфере.
         if len(self) == len(self._buffer):
             self._start_index = (self._start_index - n) % len(self)
-        else:
+        elif n >= 0:
             for _ in range(n):
                 self._buffer[(self._start_index - 1) % len(self._buffer)] = self[-1]
                 self[-1] = None
                 self._start_index = (self._start_index - 1) % len(self._buffer)
+        elif n < 0:
+            for i in range(abs(n)):
+                self._buffer[(self._start_index + len(self)) % len(self._buffer)] = self[0]
+                self[0] = None
+                self._start_index = (self._start_index + 1) % len(self._buffer)
