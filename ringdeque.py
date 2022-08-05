@@ -105,19 +105,18 @@ class RingDeque(typing.MutableSequence):
         return self.pop(0)
 
     def rotate(self, n=1):
-        # Нормализуем индекс.
-        n = n % len(self) if n >= 0 else n % -len(self)
+        # Нормализуем n для случаев.
+        n = n % len(self)
         # При полностью заполненом буфере достаточно изменить
         # позицию старта в буфере.
         if len(self) == len(self._buffer):
             self._start_index = (self._start_index - n) % len(self)
-        elif n >= 0:
+        # Для лучшей производительности алгоритма сторона
+        # вращения определяется количеством необходимых
+        # перестановок.
+        elif n <= len(self) // 2:
             for _ in range(n):
-                self._buffer[(self._start_index - 1) % len(self._buffer)] = self[-1]
-                self[-1] = None
-                self._start_index = (self._start_index - 1) % len(self._buffer)
-        elif n < 0:
-            for i in range(abs(n)):
-                self._buffer[(self._start_index + len(self)) % len(self._buffer)] = self[0]
-                self[0] = None
-                self._start_index = (self._start_index + 1) % len(self._buffer)
+                self.appendleft(self.pop())
+        else:
+            for _ in range(len(self) - n):
+                self.append(self.popleft())
