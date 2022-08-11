@@ -16,6 +16,7 @@ class RingDeque(typing.MutableSequence):
         if (index < 0 and abs(index) > self._items_amount or
                 index >= self._items_amount):
             raise IndexError('deque index out of range')
+        # Нормализуем индекс для отрицательных значений
         index = index % self._items_amount
         return self._buffer[(self._start_index + index) % len(self._buffer)]
 
@@ -23,6 +24,7 @@ class RingDeque(typing.MutableSequence):
         if (index < 0 and abs(index) > self._items_amount or
                 index >= self._items_amount):
             raise IndexError('deque index out of range')
+        # Нормализуем индекс для отрицательных значений
         index = index % self._items_amount
         self._buffer[(self._start_index + index) % len(self._buffer)] = value
 
@@ -30,6 +32,7 @@ class RingDeque(typing.MutableSequence):
         if (index < 0 and abs(index) > self._items_amount or
                 index >= self._items_amount):
             raise IndexError('deque index out of range')
+        # Нормализуем индекс для отрицательных значений
         index = index % len(self)
         # Для удаления нужного элемента, переставляем все стоящие от него
         # справа или слева элементы на 1 ячейку. Направление перестановки
@@ -56,6 +59,10 @@ class RingDeque(typing.MutableSequence):
         return f'RingDeque({items}, maxlen={len(self._buffer)})'
 
     def append(self, item):
+        # Проверка на maxlen=0. В случае нулевой длины очереди,
+        # никакие элементы не могут быть добавлены.
+        if not self._buffer:
+            return
         if self._items_amount < len(self._buffer):
             self._items_amount += 1
             self[self._items_amount - 1] = item
@@ -64,6 +71,10 @@ class RingDeque(typing.MutableSequence):
             self._start_index = (self._start_index + 1) % len(self._buffer)
 
     def appendleft(self, item):
+        # Проверка на maxlen=0. В случае нулевой длины очереди,
+        # никакие элементы не могут быть добавлены.
+        if not self._buffer:
+            return
         if self._items_amount < len(self._buffer):
             self._items_amount += 1
         self._start_index = (self._start_index - 1) % len(self._buffer)
@@ -105,7 +116,11 @@ class RingDeque(typing.MutableSequence):
         return self.pop(0)
 
     def rotate(self, n=1):
-        # Нормализуем n для случаев.
+        # Проверка на maxlen=0. В случае нулевой длины очереди,
+        # ее нельзя никак вращать.
+        if not self._buffer:
+            return
+        # Нормализуем n для случаев, когда abs(n) > len(self).
         n = n % len(self)
         # При полностью заполненом буфере достаточно изменить
         # позицию старта в буфере.
