@@ -358,6 +358,10 @@ class TestRingDeque:
             assert copy_deque != original_deque
             assert list(copy_deque) != list(original_deque)
 
+            copy_deque.clear()
+            assert list(original_deque) == [1, 2, 3]
+            assert list(copy_deque) == []
+
     def test_eq(self):
         assert RingDeque([1, 2, 3], maxlen=4) == RingDeque([1, 2, 3], maxlen=4)
         assert RingDeque([1, 2, 3], maxlen=4) == RingDeque([1, 2, 3], maxlen=3)
