@@ -6,6 +6,7 @@ class RingDeque(typing.MutableSequence):
     def __init__(self, iterable=None, *, maxlen):
         if maxlen < 0:
             raise ValueError('maxlen must be positive')
+        self.maxlen = maxlen
         self._buffer = [None for _ in range(maxlen)]
         self._start_index = 0
         self._items_amount = 0
@@ -53,6 +54,9 @@ class RingDeque(typing.MutableSequence):
 
     def __len__(self):
         return self._items_amount
+
+    def __eq__(self, other):
+        return isinstance(other, RingDeque) and list(self) == list(other)
 
     def __repr__(self):
         items = [item for item in self]
