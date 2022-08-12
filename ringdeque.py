@@ -58,6 +58,9 @@ class RingDeque(typing.MutableSequence):
     def __eq__(self, other):
         return isinstance(other, RingDeque) and list(self) == list(other)
 
+    def __copy__(self):
+        return RingDeque(list(self), maxlen=len(self._buffer))
+
     def __repr__(self):
         items = [item for item in self]
         return f'RingDeque({items}, maxlen={len(self._buffer)})'
@@ -89,7 +92,7 @@ class RingDeque(typing.MutableSequence):
             self.appendleft(i)
 
     def copy(self):
-        return RingDeque(list(self), maxlen=len(self._buffer))
+        return self.__copy__()
 
     def insert(self, index, item):
         if self._items_amount == len(self._buffer):
