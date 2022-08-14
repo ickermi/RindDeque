@@ -58,6 +58,16 @@ class RingDeque(typing.MutableSequence):
     def __eq__(self, other):
         return isinstance(other, RingDeque) and list(self) == list(other)
 
+    def __add__(self, other):
+        if not isinstance(other, RingDeque):
+            cls = type(other)
+            raise TypeError(f'can only concatinate RingDeque (not {cls.__name__}) to RingDeque')
+        return RingDeque(list(self) + list(other), maxlen=self.maxlen)
+
+    def __iadd__(self, other):
+        self.extend(list(other))
+        return self
+
     def __copy__(self):
         return RingDeque(list(self), maxlen=len(self._buffer))
 

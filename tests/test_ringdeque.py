@@ -392,6 +392,21 @@ class TestRingDeque:
         assert list(deque) == [1, 2, 3, 4]
         assert deque.maxlen == 7
 
+        deque = RingDeque([1, 2, 3], maxlen=3) + RingDeque([4, 5], maxlen=5)
+        assert list(deque) == [3, 4, 5]
+        assert deque.maxlen == 3
+
+        deque_a = RingDeque([1, 2, 3], maxlen=5)
+        deque_b = deque_a
+        deque_a += [4, 5]
+        assert list(deque_b) == [1, 2, 3, 4, 5]
+
+        deque_a = RingDeque([1, 2, 3], maxlen=6)
+        deque_b = deque_a
+        deque_a = deque_a + deque_b
+        assert list(deque_a) == [1, 2, 3, 1, 2, 3]
+        assert list(deque_b) == [1, 2, 3]
+
         with pytest.raises(TypeError):
             RingDeque([1, 2], maxlen=5) + [3, 4]  # noqa
 
