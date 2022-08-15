@@ -429,15 +429,19 @@ class TestRingDeque:
         ([1, 2, 3], 6, -10, []),
     ])
     def test_multiplication(self, items, maxlen, n, expected):
-        deque = RingDeque(items, maxlen=maxlen) * n
-        assert deque.maxlen == maxlen
-        assert list(deque) == expected
+        origin = RingDeque(items, maxlen=maxlen)
+        new = origin * n
+        assert list(origin) == items
+        assert new.maxlen == maxlen
+        assert list(new) == expected
 
-        deque = n * RingDeque(items, maxlen=maxlen)
-        assert deque.maxlen == maxlen
-        assert list(deque) == expected
+        origin = RingDeque(items, maxlen=maxlen)
+        new = n * origin
+        assert list(origin) == items
+        assert new.maxlen == maxlen
+        assert list(new) == expected
 
         deque = RingDeque(items, maxlen=maxlen)
-        assert deque.maxlen == maxlen
         deque *= n
+        assert deque.maxlen == maxlen
         assert list(deque) == expected

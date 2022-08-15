@@ -68,6 +68,24 @@ class RingDeque(typing.MutableSequence):
         self.extend(list(other))
         return self
 
+    def __mul__(self, n):
+        multiplied_deque = RingDeque([], maxlen=self.maxlen)
+        if n <= 0:
+            return multiplied_deque
+        for _ in range(n):
+            multiplied_deque.extend(list(self))
+        return multiplied_deque
+
+    def __imul__(self, n):
+        if n <= 0:
+            return RingDeque([], maxlen=self.maxlen)
+        for _ in range(n - 1):
+            self.extend(list(self))
+        return self
+
+    def __rmul__(self, n):
+        return self * n
+
     def __copy__(self):
         return RingDeque(list(self), maxlen=len(self._buffer))
 
