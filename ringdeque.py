@@ -14,27 +14,27 @@ class RingDeque(typing.MutableSequence):
             self.extend(iterable)
 
     def __getitem__(self, index):
-        if (index < 0 and abs(index) > self._items_amount or
-                index >= self._items_amount):
+        if not -len(self) <= index <= len(self) - 1:
             raise IndexError('deque index out of range')
-        # Нормализуем индекс для отрицательных значений
-        index = index % self._items_amount
-        return self._buffer[(self._start_index + index) % len(self._buffer)]
+        # Выбираем правильный положительный индекс в зависимости
+        # от знака переданного индекса.
+        index = index if index >= 0 else len(self) + index
+        return self._buffer[(self._start_index + index) % self.maxlen]
 
     def __setitem__(self, index, value):
-        if (index < 0 and abs(index) > self._items_amount or
-                index >= self._items_amount):
+        if not -len(self) <= index <= len(self) - 1:
             raise IndexError('deque index out of range')
-        # Нормализуем индекс для отрицательных значений
-        index = index % self._items_amount
-        self._buffer[(self._start_index + index) % len(self._buffer)] = value
+        # Выбираем правильный положительный индекс в зависимости
+        # от знака переданного индекса.
+        index = index if index >= 0 else len(self) + index
+        self._buffer[(self._start_index + index) % self.maxlen] = value
 
     def __delitem__(self, index):
-        if (index < 0 and abs(index) > self._items_amount or
-                index >= self._items_amount):
+        if not -len(self) <= index <= len(self) - 1:
             raise IndexError('deque index out of range')
-        # Нормализуем индекс для отрицательных значений
-        index = index % len(self)
+        # Выбираем правильный положительный индекс в зависимости
+        # от знака переданного индекса.
+        index = index if index >= 0 else len(self) + index
         # Для удаления нужного элемента, переставляем все стоящие от него
         # справа или слева элементы на 1 ячейку. Направление перестановки
         # выбирается в зависимости от того, в какой половине находится
@@ -49,7 +49,7 @@ class RingDeque(typing.MutableSequence):
             for i in reversed(range(1, index + 1)):
                 self[i] = self[i - 1]
             self[0] = None
-            self._start_index = (self._start_index + 1) % len(self._buffer)
+            self._start_index = (self._start_index + 1) % self.maxlen
         self._items_amount -= 1
 
     def __len__(self):
@@ -87,32 +87,32 @@ class RingDeque(typing.MutableSequence):
         return self * n
 
     def __copy__(self):
-        return RingDeque(list(self), maxlen=len(self._buffer))
+        return RingDeque(list(self), maxlen=self.maxlen)
 
     def __repr__(self):
         items = [item for item in self]
-        return f'RingDeque({items}, maxlen={len(self._buffer)})'
+        return f'RingDeque({items}, maxlen={self.maxlen})'
 
     def append(self, item):
-        # Проверка на maxlen=0. В случае нулевой длины очереди,
-        # никакие элементы не могут быть добавлены.
-        if not self._buffer:
+        # В случае нулевой длины очереди, никакие элементы не могут
+        # быть добавлены.
+        if self.maxlen == 0:
             return
-        if self._items_amount < len(self._buffer):
+        if len(self) < self.maxlen:
             self._items_amount += 1
-            self[self._items_amount - 1] = item
+            self[-1] = item
         else:
             self[0] = item
-            self._start_index = (self._start_index + 1) % len(self._buffer)
+            self._start_index = (self._start_index + 1) % self.maxlen
 
     def appendleft(self, item):
-        # Проверка на maxlen=0. В случае нулевой длины очереди,
-        # никакие элементы не могут быть добавлены.
-        if not self._buffer:
+        # В случае нулевой длины очереди, никакие элементы не могут
+        # быть добавлены.
+        if self.maxlen == 0:
             return
-        if self._items_amount < len(self._buffer):
+        if len(self) < self.maxlen:
             self._items_amount += 1
-        self._start_index = (self._start_index - 1) % len(self._buffer)
+        self._start_index = (self._start_index - 1) % self.maxlen
         self[0] = item
 
     def extendleft(self, iterable):
@@ -123,16 +123,17 @@ class RingDeque(typing.MutableSequence):
         return self.__copy__()
 
     def insert(self, index, item):
-        if self._items_amount == len(self._buffer):
+        if len(self) == self.maxlen:
             raise IndexError('deque already at its maximum size')
         # Если модуль индекса больше, чем количество элементов в очереди,
         # item должен попасть в начало или в конец очереди в зависимости
         # от того, положительный или отрицательный индекс был передан.
         if abs(index) >= len(self):
             index = len(self) if index > 0 else 0
-        # Нормализация индекса на случай его отрицательных значений.
         else:
-            index = index % len(self)
+            # Выбираем правильный положительный индекс в зависимости
+            # от знака переданного индекса.
+            index = index if index >= 0 else len(self) + index
         # При вставке в правую часть, все элементы справа смещаются вправо.
         # При вставке в левую часть, все элементы слева смещаются влево.
         # Это сделано для того, чтобы производить меньше смещений элементов в
@@ -151,15 +152,14 @@ class RingDeque(typing.MutableSequence):
         return self.pop(0)
 
     def rotate(self, n=1):
-        # Проверка на maxlen=0. В случае нулевой длины очереди,
-        # ее нельзя никак вращать.
-        if not self._buffer:
+        # В случае нулевой длины очереди, вращать ее не получится.
+        if self.maxlen == 0:
             return
         # Нормализуем n для случаев, когда abs(n) > len(self).
         n = n % len(self)
         # При полностью заполненом буфере достаточно изменить
         # позицию старта в буфере.
-        if len(self) == len(self._buffer):
+        if len(self) == self.maxlen:
             self._start_index = (self._start_index - n) % len(self)
         # Для лучшей производительности алгоритма сторона
         # вращения определяется количеством необходимых
