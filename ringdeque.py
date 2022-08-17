@@ -1,20 +1,24 @@
 import typing
+import itertools
 
 
 class RingDeque(typing.MutableSequence):
 
     def __init__(self, iterable=None, *, maxlen):
         if maxlen < 0:
-            raise ValueError('maxlen must be positive')
-        self.maxlen = maxlen
+            raise ValueError('maxlen must be non-negative')
         self._buffer = [None for _ in range(maxlen)]
         self._start_index = 0
         self._items_amount = 0
         if iterable:
             self.extend(iterable)
 
+    @property
+    def maxlen(self):
+        return len(self._buffer)
+
     def __getitem__(self, index):
-        if not -len(self) <= index <= len(self) - 1:
+        if not -len(self) <= index < len(self):
             raise IndexError('deque index out of range')
         # Выбираем правильный положительный индекс в зависимости
         # от знака переданного индекса.
@@ -22,7 +26,7 @@ class RingDeque(typing.MutableSequence):
         return self._buffer[(self._start_index + index) % self.maxlen]
 
     def __setitem__(self, index, value):
-        if not -len(self) <= index <= len(self) - 1:
+        if not -len(self) <= index < len(self):
             raise IndexError('deque index out of range')
         # Выбираем правильный положительный индекс в зависимости
         # от знака переданного индекса.
@@ -30,7 +34,7 @@ class RingDeque(typing.MutableSequence):
         self._buffer[(self._start_index + index) % self.maxlen] = value
 
     def __delitem__(self, index):
-        if not -len(self) <= index <= len(self) - 1:
+        if not -len(self) <= index < len(self):
             raise IndexError('deque index out of range')
         # Выбираем правильный положительный индекс в зависимости
         # от знака переданного индекса.
@@ -56,19 +60,24 @@ class RingDeque(typing.MutableSequence):
         return self._items_amount
 
     def __eq__(self, other):
-        return isinstance(other, RingDeque) and list(self) == list(other)
+        return isinstance(other, RingDeque) and len(self) == len(other) and \
+               all((a == b for a, b in zip(self, other)))
+
 
     def __add__(self, other):
         if not isinstance(other, RingDeque):
-            cls = type(other)
-            raise TypeError(f'can only concatinate RingDeque (not {cls.__name__}) to RingDeque')
-        return RingDeque(list(self) + list(other), maxlen=self.maxlen)
+            return NotImplemented
+        return RingDeque(itertools.chain(self, other), maxlen=self.maxlen)
 
     def __iadd__(self, other):
+        if not isinstance(other, typing.Iterable):
+            return NotImplemented
         self.extend(list(other))
         return self
 
     def __mul__(self, n):
+        if not isinstance(n, int):
+            return NotImplemented
         multiplied_deque = RingDeque([], maxlen=self.maxlen)
         if n <= 0:
             return multiplied_deque
@@ -77,6 +86,8 @@ class RingDeque(typing.MutableSequence):
         return multiplied_deque
 
     def __imul__(self, n):
+        if not isinstance(n, int):
+            return NotImplemented
         if n <= 0:
             return RingDeque([], maxlen=self.maxlen)
         for _ in range(n - 1):
@@ -87,10 +98,10 @@ class RingDeque(typing.MutableSequence):
         return self * n
 
     def __copy__(self):
-        return RingDeque(list(self), maxlen=self.maxlen)
+        return RingDeque(self, maxlen=self.maxlen)
 
     def __repr__(self):
-        items = [item for item in self]
+        items = list(self)
         return f'RingDeque({items}, maxlen={self.maxlen})'
 
     def append(self, item):
@@ -100,10 +111,9 @@ class RingDeque(typing.MutableSequence):
             return
         if len(self) < self.maxlen:
             self._items_amount += 1
-            self[-1] = item
         else:
-            self[0] = item
             self._start_index = (self._start_index + 1) % self.maxlen
+        self[-1] = item
 
     def appendleft(self, item):
         # В случае нулевой длины очереди, никакие элементы не могут
